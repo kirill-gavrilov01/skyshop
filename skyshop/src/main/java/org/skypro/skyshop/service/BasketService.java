@@ -3,57 +3,50 @@ package org.skypro.skyshop.service;
 import org.skypro.skyshop.model.basket.BasketItem;
 import org.skypro.skyshop.model.basket.ProductBasket;
 import org.skypro.skyshop.model.basket.UserBasket;
-import org.skypro.skyshop.model.basket.product.Product;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.ArrayList;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class BasketService {
 
-    private final ProductBasket basketComponent;
+    private final ProductBasket productBasket;
     private final StorageService storageService;
 
-    public BasketService(ProductBasket basketComponent, StorageService storageService) {
-        this.basketComponent = basketComponent;
+    @Autowired
+    public BasketService(ProductBasket productBasket, StorageService storageService) {
+        this.productBasket = productBasket;
         this.storageService = storageService;
-
-    }
-
-    public void addToBasket(UUID id) {
-        Optional<Product> product = storageService.getProductById(id);
-        if (!product.isPresent()) {
-            throw new IllegalArgumentException("Продукт с указанным ID не найден");
-        }
-        basketComponent.addProduct(id);
     }
 
     public UserBasket getUserBasket() {
-        List<BasketItem> items = basketComponent.getAllProducts().entrySet().stream()
-                .map(entry -> {
-                    UUID productId = entry.getKey();
-                    int quantity = entry.getValue();
-                    Optional<Product> optProduct = storageService.getProductById(productId);
+        List<BasketItem> items = new ArrayList<>();
+        double total = 0.0;
 
+        for (Map.Entry<Object, Object> entry : productBasket.getItems().entrySet()) {
+            UUID productId = (UUID) entry.getKey();
+            int quantity = (int) entry.getValue();
 
-                    return optProduct.map(p -> new BasketItem(p, quantity)).orElse(null);
-                })
-                .filter(item -> item != null)
-                .collect(Collectors.toList());
+            var product = storageService.getProductById(productId).orElse(null);
 
+            if (product != null) {
+                BasketItem basketItem = new BasketItem(product, quantity);
+                items.add(basketItem);
+                total += quantity * product.getPrice();
+            }
+        }
 
-        double totalCost = items.stream()
-                .mapToDouble(BasketService::applyAsDouble)
-                .sum();
-
-        return new UserBasket(items, totalCost);
+        return new UserBasket(items, total);
     }
 
-    private static double applyAsDouble(BasketItem basketItem) {
+    public void addToBasket(UUID id) {
 
-        return 0;
     }
 }
+
+
+
+

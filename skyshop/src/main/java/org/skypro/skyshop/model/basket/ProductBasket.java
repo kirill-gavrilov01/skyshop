@@ -22,4 +22,8 @@ public class ProductBasket {
     public Map<UUID, Integer> getAllProducts() {
         return Collections.unmodifiableMap(products);
     }
+
+    public Map<Object, Object> getItems() {
+        return null;
+    }
 }
