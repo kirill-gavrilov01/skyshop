@@ -1,22 +1,12 @@
 package org.skypro.skyshop.model.basket;
 
-import org.skypro.skyshop.model.basket.product.Product;
+import org.skypro.skyshop.model.product.Product;
 
-public final class BasketItem {
-    private final Product product;
-    private final int quantity;
-
-    public BasketItem(Product product, int quantity) {
-        this.product = product;
-        this.quantity = quantity;
+public class BasketItem {
+    public BasketItem(Product product, Integer value) {
     }
 
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public int getQuantity() {
-        return quantity;
+    public int getTotalPrice() {
+    return 0;
     }
 }

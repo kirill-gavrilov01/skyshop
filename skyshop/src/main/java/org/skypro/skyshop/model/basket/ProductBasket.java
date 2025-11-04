@@ -5,25 +5,29 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-@Component
 @SessionScope
+@Component
 public class ProductBasket {
+    private final Map<UUID, Integer> totalProducts;
 
-    private final Map<UUID, Integer> products = new ConcurrentHashMap<>();
-
-    public void addProduct(UUID productId) {
-        products.merge(productId, 1, Integer::sum);
+    public ProductBasket() {
+        this.totalProducts = new HashMap<>();
     }
 
-    public Map<UUID, Integer> getAllProducts() {
-        return Collections.unmodifiableMap(products);
+    public void addProduct(UUID id) {
+        int productCount = 1;
+
+        if (totalProducts.containsKey(id)) {
+            productCount = productCount + totalProducts.get(id);
+        }
+        totalProducts.put(id, productCount);
     }
 
-    public Map<Object, Object> getItems() {
-        return null;
+    public Map<UUID, Integer> getProductBasket() {
+        return Collections.unmodifiableMap(totalProducts);
     }
 }

@@ -3,20 +3,27 @@ package org.skypro.skyshop.model.basket;
 import java.util.List;
 
 
+
 public final class UserBasket {
-    private final List<BasketItem> items;
-    private final double total;
+    private final List<BasketItem> basketItems;
+    private final int total;
 
-    public UserBasket(List<BasketItem> items, double total) {
-        this.items = items;
-        this.total = total;
+    public UserBasket(List<BasketItem> basketItems) {
+        this.basketItems = basketItems;
+        this.total = calculateTotalCost();
     }
 
-    public List<BasketItem> getItems() {
-        return items;
+    public List<BasketItem> getBasketItems() {
+        return basketItems;
     }
 
-    public double getTotal() {
+    public int calculateTotalCost() {
+        return basketItems.stream()
+                .mapToInt(BasketItem::getTotalPrice)
+                .sum();
+    }
+
+    public int getTotal() {
         return total;
     }
 }

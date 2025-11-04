@@ -3,50 +3,56 @@ package org.skypro.skyshop.service;
 import org.skypro.skyshop.model.basket.BasketItem;
 import org.skypro.skyshop.model.basket.ProductBasket;
 import org.skypro.skyshop.model.basket.UserBasket;
+import org.skypro.skyshop.model.product.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class BasketService {
 
-    private final ProductBasket productBasket;
-    private final StorageService storageService;
+    private final ProductBasket basket;
+    private final StorageService storage;
 
     @Autowired
-    public BasketService(ProductBasket productBasket, StorageService storageService) {
-        this.productBasket = productBasket;
-        this.storageService = storageService;
+    public BasketService(ProductBasket basket, StorageService storage) {
+        this.basket = basket;
+        this.storage = storage;
+    }
+
+    public void addProduct(UUID id) {
+        Optional<Product> product = storage.getProductById(id);
+        if (!product.isPresent()) {
+            throw new IllegalStateException("Продукт не найден: " + id);
+        }
+        basket.addProduct(id);
     }
 
     public UserBasket getUserBasket() {
-        List<BasketItem> items = new ArrayList<>();
-        double total = 0.0;
+        // Получаем содержимое корзины
+        Map<UUID, Integer> productsInBasket = basket.getProductBasket();
 
-        for (Map.Entry<Object, Object> entry : productBasket.getItems().entrySet()) {
-            UUID productId = (UUID) entry.getKey();
-            int quantity = (int) entry.getValue();
+        // Проверяем наличие каждого продукта и формируем итоговые элементы корзины
+        List<BasketItem> items = productsInBasket.entrySet().stream()
+                .map(entry -> {
+                    UUID productId = entry.getKey();
+                    int quantity = entry.getValue();
 
-            var product = storageService.getProductById(productId).orElse(null);
+                    Optional<Product> productOptional = storage.getProductById(productId);
+                    if (!productOptional.isPresent()) {
+                        throw new IllegalStateException("Продукт не найден: " + productId);
+                    }
 
-            if (product != null) {
-                BasketItem basketItem = new BasketItem(product, quantity);
-                items.add(basketItem);
-                total += quantity * product.getPrice();
-            }
-        }
+                    Product product = productOptional.get();
+                    return new BasketItem(product, quantity);
+                }).collect(Collectors.toList());
 
-        return new UserBasket(items, total);
-    }
-
-    public void addToBasket(UUID id) {
-
+        return new UserBasket(items);
     }
 }
-
-
-
 
